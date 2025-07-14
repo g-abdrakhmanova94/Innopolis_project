@@ -1,4 +1,4 @@
-package net.lesson9;
+package lesson9;
 
 import java.util.Collection;
 

@@ -1,4 +1,4 @@
-package net.lesson9;
+package lesson9;
 
 public class TestClass {
 

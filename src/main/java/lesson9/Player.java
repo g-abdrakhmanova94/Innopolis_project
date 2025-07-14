@@ -1,4 +1,4 @@
-package net.lesson9;
+package lesson9;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlAccessorType;

@@ -1,4 +1,4 @@
-package net.lesson9;
+package lesson9;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,8 +55,12 @@ public class PlayerServiceJSON implements PlayerService {
     @Override
     public Player getPlayerById(int id) {
         for (Player p : players) {
-            if (p.getId() == id) return p;
+            if (p.getId() == id) {
+                System.out.println("Найден игрок по ID " + id + ": " + p);
+                return p;
+            }
         }
+        System.out.println("Игрок с ID " + id + " не найден");
         return null;
     }
 
@@ -70,6 +74,7 @@ public class PlayerServiceJSON implements PlayerService {
         Player p = new Player(nextId++, nickname, 0, false);
         players.add(p);
         saveToFile();
+        System.out.println("Создан игрок: " + p);
         return p.getId();
     }
 
@@ -89,6 +94,9 @@ public class PlayerServiceJSON implements PlayerService {
 
     @Override
     public int addPoints(int playerId, int points) {
+        if (points < 0) {
+            throw new IllegalArgumentException("Points cannot be negative");
+        }
         for (Player p : players) {
             if (p.getId() == playerId) {
                 p.setPoints(p.getPoints() + points);
