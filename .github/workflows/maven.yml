@@ -1,11 +1,11 @@
 name: Run Tests & Generate Report
 
-on: 
+on:
   push:
-    branches: [ main, master ]
+    branches: [ "master", "new_branch" ]
   pull_request:
-    branches: [ main, master ]
-    
+    branches: [ "master", "new_branch" ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
