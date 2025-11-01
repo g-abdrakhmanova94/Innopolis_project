@@ -27,18 +27,20 @@ jobs:
         
     - name: Install Geckodriver
       run: |
-        sudo apt-get update
-        sudo apt-get install -y firefox-geckodriver
+        wget https://github.com/mozilla/geckodriver/releases/latest/download/geckodriver-v0.33.0-linux64.tar.gz
+        tar -xzf geckodriver-v0.33.0-linux64.tar.gz
+        sudo mv geckodriver /usr/local/bin/
+        geckodriver --version
         
-    - name: Run tests
+    - name: Run tests with Maven
       run: |
-        mvn test -Dallure.results.directory=src/allure-results
+        mvn test -Dallure.results.directory=target/allure-results
       
     - name: Generate Allure report
       uses: simple-elf/allure-report-action@master
       if: always()
       with:
-        allure_results: src/allure-results
+        allure_results: target/allure-results
         allure_report: allure-report
         gh_pages: gh-pages
         
