@@ -1,53 +1,68 @@
-name: Run Tests & Generate Report
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
 
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: MY AUTOTESTS
+
+
+permissions: 
+    id-token: write # Grant id-token: write permission
+    pages: write
+    contents: write
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "master", "new_branch" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "master", "new_branch" ]
 
 jobs:
-  test:
+  build:
+    environment: 
+          name: github-actions
+          url: ${{steps.deployment.outputs.page_url}}
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Java
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '11'
+        java-version: '17'
         distribution: 'temurin'
-        
-    - name: Set up Firefox
-      uses: browser-actions/setup-firefox@v1
-      with:
-        firefox-version: 'latest'
-        
-    - name: Install Geckodriver
-      run: |
-        wget https://github.com/mozilla/geckodriver/releases/latest/download/geckodriver-v0.33.0-linux64.tar.gz
-        tar -xzf geckodriver-v0.33.0-linux64.tar.gz
-        sudo mv geckodriver /usr/local/bin/
-        geckodriver --version
-        
-    - name: Run tests with Maven
-      run: |
-        mvn test -Dallure.results.directory=target/allure-results
+        cache: maven
+    
+    - name: Install Allure  
+      run: |  
+        curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip  
+        sudo apt-get install -y unzip  
+        unzip allure.zip -d /opt/allure  
+        sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure 
+
+    - name: Build
+      run: mvn clean install
+    - name: Run tests
+      run: mvn clean test
+
+    - name: List Allure Results Files  
+      run: ls -R allure-results  
       
-    - name: Generate Allure report
-      uses: simple-elf/allure-report-action@master
-      if: always()
-      with:
-        allure_results: target/allure-results
-        allure_report: allure-report
-        gh_pages: gh-pages
-        
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: always()
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: allure-report
+    - name: Generate Allure Report  
+      run: |  
+        mkdir -p allure-report  
+        allure generate --clean allure-results -o allure-report
+
+    - name: List Allure Report Files Before Upload  
+      run: ls -R allure-report  
+      
+    - name: Upload Allure Report as artifact  
+      uses: actions/upload-pages-artifact@v3  
+      with:  
+        path: 'allure-report'  
+
+    - name: Deploy to GitHub Pages  
+      id: deployment  
+      uses: actions/deploy-pages@v4
