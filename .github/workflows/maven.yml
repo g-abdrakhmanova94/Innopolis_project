@@ -1,55 +1,51 @@
-name: Run Tests & Generate Report
+name: Java CI with Allure Report
 
 on:
   push:
-    branches: [ "master", "new_branch" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "master", "new_branch" ]
+    branches: [ "main", "master" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-    
-    - name: Install Allure
-      if: always()
-      run: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
-        tar -xzf allure-2.24.0.tgz
-        sudo mv allure-2.24.0 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
-    
-    - name: Generate Allure report
-      if: always()
-      run: |
-        # Создаём папку если её нет
-        mkdir -p target/allure-results
-        # Генерируем отчёт
-        allure generate target/allure-results -o allure-report --clean
-    
-    - name: List files for debugging
-      if: always()
-      run: |
-        echo "=== Current directory ==="
-        pwd
-        echo "=== All files ==="
-        ls -la
-        echo "=== Allure report exists? ==="
-        ls -la allure-report/ || echo "Allure report not found"
-    
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: always()
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: allure-report
-        force_orphan: true  # Принудительно создаёт ветку
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install GUI dependencies for Firefox (Ubuntu 24.04)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-0 \
+            xvfb \
+            libxt6t64 \
+            libxss1t64 \
+            libasound2t64
+
+      - name: Run tests with Xvfb
+        run: xvfb-run -a mvn test
+
+      - name: Generate Allure Report
+        run: |
+          mkdir -p allure-report
+          if [ -d "target/allure-results" ]; then
+            allure generate --clean target/allure-results -o allure-report
+          else
+            echo "No Allure results found!"
+            exit 1
+          fi
+
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
