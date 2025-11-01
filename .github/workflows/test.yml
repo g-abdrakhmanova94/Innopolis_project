@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: MY AUTOTESTS
+name: Run Tests & Generate Report
 
 
 permissions: 
