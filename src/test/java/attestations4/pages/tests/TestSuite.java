@@ -33,7 +33,7 @@ public class TestSuite {
     @BeforeEach
     public void setUp() {
         // Указываем правильный путь для сохранения результатов Allure
-        System.setProperty("allure.results.directory", "src/allure-results");
+        System.setProperty("allure.results.directory", "target/allure-results");
         driver = new FirefoxDriver();
         authPage = new AuthPage(driver);
         productPage = new ProductPage(driver);
