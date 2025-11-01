@@ -23,20 +23,31 @@ jobs:
     - name: Run Maven tests
       run: mvn clean test
     
-    - name: Archive Allure results
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-results
-        path: target/allure-results/
-        retention-days: 30
+    - name: Install Allure
+      if: always()
+      run: |
+        wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+        tar -xzf allure-2.24.0.tgz
+        sudo mv allure-2.24.0 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
     
     - name: Generate Allure report
-      uses: simple-elf/allure-report-action@master
       if: always()
-      with:
-        allure_results: target/allure-results
-        allure_report: allure-report
-        gh_pages: gh-pages
+      run: |
+        # Создаём папку если её нет
+        mkdir -p target/allure-results
+        # Генерируем отчёт
+        allure generate target/allure-results -o allure-report --clean
+    
+    - name: List files for debugging
+      if: always()
+      run: |
+        echo "=== Current directory ==="
+        pwd
+        echo "=== All files ==="
+        ls -la
+        echo "=== Allure report exists? ==="
+        ls -la allure-report/ || echo "Allure report not found"
     
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
@@ -45,3 +56,4 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
         publish_dir: allure-report
+        force_orphan: true  # Принудительно создаёт ветку
